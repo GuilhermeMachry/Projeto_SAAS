@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagrama de Contexto (Nível 1) - Rastreador de Preços</title>
+  <style>
+    /* Reset & Variáveis de Estilo */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-gradient: radial-gradient(circle at 50% 50%, #f8fafc 0%, #edf2f7 100%);
+      --card-bg: #ffffff;
+      --navy-900: #0f172a;
+      --navy-800: #1e293b;
+      --navy-700: #1e3a5f;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    /* Container do Slide */
+    .slide-card {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 1080px;
+      border-radius: 24px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
+      padding: 36px 44px 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    /* Cabeçalho do Slide */
+    .header {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .badge-level {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      border: 1px solid #bfdbfe;
+      margin-bottom: 8px;
+    }
+
+    .badge-level::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background-color: #2563eb;
+      border-radius: 50%;
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--navy-900);
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    /* Área do Diagrama SVG */
+    .diagram-container {
+      width: 100%;
+      max-width: 980px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      user-select: none;
+    }
+
+    /* Tipografia nos Elementos SVG */
+    .node-text-title {
+      font-family: var(--font-family);
+      font-weight: 700;
+      font-size: 14px;
+      fill: #0f172a;
+      text-anchor: middle;
+    }
+
+    .node-text-subtitle {
+      font-family: var(--font-family);
+      font-weight: 600;
+      font-size: 10px;
+      fill: #64748b;
+      text-anchor: middle;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .center-text-title {
+      font-family: var(--font-family);
+      font-weight: 800;
+      font-size: 16px;
+      fill: #ffffff;
+      text-anchor: middle;
+      letter-spacing: -0.3px;
+    }
+
+    .center-text-subtitle {
+      font-family: var(--font-family);
+      font-weight: 700;
+      font-size: 10.5px;
+      fill: #93c5fd;
+      text-anchor: middle;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .edge-label-text {
+      font-family: var(--font-family);
+      font-size: 11px;
+      font-weight: 600;
+      fill: #334155;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    /* Animação suave para as linhas de fluxo */
+    .flow-line {
+      stroke-dasharray: 6 4;
+      animation: flowAnimation 25s linear infinite;
+    }
+
+    @keyframes flowAnimation {
+      from { stroke-dashoffset: 200; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* Efeito de hover suave nos nós */
+    .interactive-node {
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: default;
+    }
+
+    .interactive-node:hover {
+      transform: scale(1.025);
+    }
+
+    /* Rodapé / Legenda */
+    .footer {
+      width: 100%;
+      border-top: 1px solid #f1f5f9;
+      margin-top: 8px;
+      padding-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .legend-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .legend-dot.system {
+      background: #0f2b48;
+    }
+
+    .legend-dot.external {
+      background: #ffffff;
+      border: 2px solid #3b82f6;
+    }
+
+    .tag-saas {
+      font-weight: 600;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="slide-card">
+    <!-- Cabeçalho -->
+    <header class="header">
+      <div class="badge-level">DFD • Nível 1</div>
+      <h1 class="title">Diagrama de Contexto</h1>
+      <p class="subtitle">Visão geral do sistema e integração com entidades externas</p>
+    </header>
+
+    <!-- Diagrama SVG -->
+    <section class="diagram-container">
+      <svg viewBox="0 0 980 540" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Filtros de Sombra e Brilho -->
+          <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0f172a" flood-opacity="0.08" />
+          </filter>
+          
+          <filter id="centerGlow" x="-25%" y="-25%" width="150%" height="150%">
+            <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0f2b48" flood-opacity="0.25" />
+          </filter>
+
+          <filter id="pillShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.06" />
+          </filter>
+
+          <!-- Gradientes -->
+          <linearGradient id="centerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0f172a" />
+            <stop offset="60%" stop-color="#1e3a5f" />
+            <stop offset="100%" stop-color="#091e36" />
+          </linearGradient>
+
+          <linearGradient id="userGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#f8faff" />
+          </linearGradient>
+
+          <linearGradient id="storeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#f0fdf4" />
+          </linearGradient>
+
+          <linearGradient id="telegramGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#f0f9ff" />
+          </linearGradient>
+
+          <!-- Marcadores de Seta -->
+          <marker id="arrow-slate" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569" />
+          </marker>
+
+          <marker id="arrow-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0284c7" />
+          </marker>
+        </defs>
+
+        <!-- ======================================================== -->
+        <!-- LINHAS DE CONEXÃO & SETAS                                 -->
+        <!-- ======================================================== -->
+
+        <!-- 1. Linha Usuário (Esquerda) -> Centro -->
+        <g>
+          <line x1="228" y1="200" x2="396" y2="200" stroke="#cbd5e1" stroke-width="2.5" />
+          <line x1="228" y1="200" x2="398" y2="200" stroke="#475569" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow-slate)" class="flow-line" />
+          <g filter="url(#pillShadow)">
+            <rect x="254" y="186" width="116" height="28" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.2" />
+            <text x="312" y="200" class="edge-label-text">consulta / envia</text>
+          </g>
+        </g>
+
+        <!-- 2. Linha Centro -> Lojas de Hardware (Direita) -->
+        <g>
+          <line x1="582" y1="200" x2="750" y2="200" stroke="#cbd5e1" stroke-width="2.5" />
+          <line x1="582" y1="200" x2="752" y2="200" stroke="#475569" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow-slate)" class="flow-line" />
+          <g filter="url(#pillShadow)">
+            <rect x="608" y="186" width="128" height="28" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.2" />
+            <text x="672" y="200" class="edge-label-text">consulta / processa</text>
+          </g>
+        </g>
+
+        <!-- 3. Linha Centro -> API do Telegram (Abaixo) -->
+        <g>
+          <line x1="490" y1="292" x2="490" y2="384" stroke="#cbd5e1" stroke-width="2.5" />
+          <line x1="490" y1="292" x2="490" y2="386" stroke="#475569" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow-slate)" class="flow-line" />
+          <g filter="url(#pillShadow)">
+            <rect x="456" y="324" width="68" height="26" rx="13" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.2" />
+            <text x="490" y="337" class="edge-label-text">envia</text>
+          </g>
+        </g>
+
+        <!-- 4. Linha Curva: API do Telegram -> Usuário -->
+        <g>
+          <path d="M 426 445 C 290 445, 185 365, 165 272" fill="none" stroke="#bae6fd" stroke-width="2.5" />
+          <path d="M 426 445 C 290 445, 185 365, 165 270" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow-blue)" class="flow-line" />
+          <g filter="url(#pillShadow)">
+            <rect x="238" y="390" width="76" height="26" rx="13" fill="#ffffff" stroke="#bae6fd" stroke-width="1.2" />
+            <text x="276" y="403" class="edge-label-text" style="font-weight: 700; fill: #0369a1;">notifica</text>
+          </g>
+        </g>
+
+        <!-- ======================================================== -->
+        <!-- NÓ CENTRAL: RASTREADOR DE PREÇOS                         -->
+        <!-- ======================================================== -->
+        <g class="interactive-node" style="transform-origin: 490px 200px;">
+          <circle cx="490" cy="200" r="102" fill="none" stroke="#3b82f6" stroke-width="1" stroke-opacity="0.2" stroke-dasharray="4 4" />
+          
+          <circle cx="490" cy="200" r="88" fill="url(#centerGradient)" stroke="#2563eb" stroke-width="2" filter="url(#centerGlow)" />
+          <circle cx="490" cy="200" r="82" fill="none" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1" />
+
+          <!-- Ícone de Gráfico/Radar -->
+          <g transform="translate(476, 142)">
+            <path d="M2 18L9 11L14 16L24 6M24 6H17M24 6V13" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          </g>
+
+          <text x="490" y="196" class="center-text-title">Rastreador de</text>
+          <text x="490" y="218" class="center-text-title">Preços</text>
+          <text x="490" y="244" class="center-text-subtitle">Sistema Central</text>
+        </g>
+
+        <!-- ======================================================== -->
+        <!-- SATÉLITE 1: USUÁRIO (ESQUERDA)                           -->
+        <!-- ======================================================== -->
+        <g class="interactive-node" style="transform-origin: 165px 200px;">
+          <circle cx="165" cy="200" r="62" fill="url(#userGradient)" stroke="#3b82f6" stroke-width="2.5" filter="url(#softShadow)" />
+
+          <g transform="translate(153, 154)">
+            <circle cx="12" cy="8" r="5" fill="none" stroke="#2563eb" stroke-width="2" />
+            <path d="M3 21C3 16.5 7 14 12 14C17 14 21 16.5 21 21" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" />
+          </g>
+
+          <text x="165" y="208" class="node-text-title">Usuário</text>
+          <text x="165" y="226" class="node-text-subtitle">Entidade Externa</text>
+        </g>
+
+        <!-- ======================================================== -->
+        <!-- SATÉLITE 2: LOJAS DE HARDWARE (DIREITA)                  -->
+        <!-- ======================================================== -->
+        <g class="interactive-node" style="transform-origin: 815px 200px;">
+          <circle cx="815" cy="200" r="62" fill="url(#storeGradient)" stroke="#10b981" stroke-width="2.5" filter="url(#softShadow)" />
+
+          <g transform="translate(803, 150)">
+            <path d="M3 9L5 3H19L21 9M3 9V20C3 20.6 3.4 21 4 21H20C20.6 21 21 20.6 21 20V9M3 9H21M9 13C9 14.7 10.3 16 12 16C13.7 16 15 14.7 15 13" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </g>
+
+          <text x="815" y="200" class="node-text-title">Lojas de</text>
+          <text x="815" y="216" class="node-text-title">Hardware</text>
+          <text x="815" y="234" class="node-text-subtitle">E-commerces</text>
+        </g>
+
+        <!-- ======================================================== -->
+        <!-- SATÉLITE 3: API DO TELEGRAM (ABAIXO)                     -->
+        <!-- ======================================================== -->
+        <g class="interactive-node" style="transform-origin: 490px 445px;">
+          <circle cx="490" cy="445" r="62" fill="url(#telegramGradient)" stroke="#0284c7" stroke-width="2.5" filter="url(#softShadow)" />
+
+          <g transform="translate(478, 398)">
+            <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </g>
+
+          <text x="490" y="448" class="node-text-title">API do Telegram</text>
+          <text x="490" y="468" class="node-text-subtitle">Canal de Notificação</text>
+        </g>
+      </svg>
+    </section>
+
+    <!-- Rodapé -->
+    <footer class="footer">
+      <div class="legend-group">
+        <div class="legend-item">
+          <span class="legend-dot system"></span>
+          <span>Limite do Sistema</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot external"></span>
+          <span>Entidades Externas</span>
+        </div>
+      </div>
+      <div class="tag-saas">Projeto SaaS • Engenharia de Software</div>
+    </footer>
+  </main>
+
+</body>
+</html>
