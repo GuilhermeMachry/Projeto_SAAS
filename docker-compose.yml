@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: hardtrack_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage/tenants:/app/storage/tenants
+    environment:
+      - STORAGE_DIR=/app/storage/tenants
+      - TELEGRAM_MOCK_MODE=true
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: hardtrack_worker
+    volumes:
+      - ./storage/tenants:/app/storage/tenants
+    environment:
+      - STORAGE_DIR=/app/storage/tenants
+      - TELEGRAM_MOCK_MODE=true
+      - WORKER_POLL_INTERVAL_SECONDS=60
+    depends_on:
+      - api
+    restart: unless-stopped
