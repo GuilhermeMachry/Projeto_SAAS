@@ -4,7 +4,7 @@
 [![Multi-Tenancy](https://img.shields.io/badge/Tenancy-Silo%20por%20Arquivo%20JSON-blue.svg)](docs/adr/001-tenancy-silo-json.md)
 [![Arquitetura](https://img.shields.io/badge/Arquitetura-Modelo%20C4%20%2B%20DDD-teal.svg)](docs/c4/README.md)
 [![LGPD](https://img.shields.io/badge/Conformidade-LGPD%20Art.%2018%20(Expurgo%20At%C3%B4mico)-green.svg)](docs/lgpd.md)
-[![Defesa Técnica](https://img.shields.io/badge/Etapa%202-N%C3%BAcleo%20Multi--Tenant%20Pronto-brightgreen.svg)](demo_isolamento.py)
+[![Defesa Técnica](https://img.shields.io/badge/Etapa%202-N%C3%BAcleo%20Multi--Tenant%20Pronto-brightgreen.svg)](scripts/demo_isolamento.py)
 [![Licença](https://img.shields.io/badge/Licen%C3%A7a-MIT-purple.svg)](LICENSE)
 
 ---
@@ -74,17 +74,37 @@ Toda a documentação técnica exigida pelo Guia do Projeto Integrador está org
 
 ---
 
+## 📂 Estrutura Enxuta do Repositório
+
+O projeto segue estritamente a convenção de repositórios SaaS, centralizando toda a documentação das etapas na pasta `docs/` e mantendo a raiz limpa e organizada:
+
+```text
+├── .github/          # Automações de CI (GitHub Actions)
+├── docker/           # Definições de contêineres Docker (API e Worker)
+├── docs/             # Toda a documentação e entregáveis das Etapas (C4, ADRs, DDD, LGPD)
+├── scripts/          # Utilitários e script de demonstração ao vivo
+├── src/              # Código-fonte da aplicação (API REST e Worker de Scraping)
+├── storage/          # Armazenamento físico dos Silos por Tenant
+├── tests/            # Suíte de testes automatizados (Pytest)
+├── docker-compose.yml# Orquestração unificada dos serviços
+├── pytest.ini        # Configurações de execução de testes
+├── README.md         # Fachada de apresentação do produto e projeto
+└── requirements.txt  # Dependências Python fixadas
+```
+
+---
+
 ## ⚡ Demonstração Rápida e Execução
 
 ### 1. Como Rodar a Demonstração ao Vivo do Isolamento (Etapa 2)
-Para a banca examinadora e avaliação técnica presencial, foi disponibilizado um script automatizado que valida o isolamento de tenancy de ponta a ponta:
+Para a banca examinadora e avaliação técnica presencial, execute o script automatizado que valida o isolamento de tenancy de ponta a ponta:
 
 ```bash
 # 1. Ativar o ambiente virtual
 source .venv/bin/activate
 
 # 2. Executar a demonstração interativa
-python demo_isolamento.py
+python scripts/demo_isolamento.py
 ```
 
 O script demonstra em 6 etapas: criação de 2 tenants em silos distintos, comprovação matemática de que Tenant A não lê Tenant B, execução do ciclo de varredura, bloqueio contra injeção de *Path Traversal* e expurgo LGPD.

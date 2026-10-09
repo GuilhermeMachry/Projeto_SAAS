@@ -32,7 +32,7 @@ jobs:
 
       - name: Executar Demonstração de Isolamento ao Vivo (Checklist Etapa 2)
         run: |
-          python demo_isolamento.py
+          python scripts/demo_isolamento.py
 
       - name: Validação do Serviço da API (Healthcheck)
         run: |

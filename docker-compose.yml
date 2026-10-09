@@ -4,7 +4,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile.api
+      dockerfile: docker/Dockerfile.api
     container_name: hardtrack_api
     ports:
       - "8000:8000"
@@ -18,7 +18,7 @@ services:
   worker:
     build:
       context: .
-      dockerfile: Dockerfile.worker
+      dockerfile: docker/Dockerfile.worker
     container_name: hardtrack_worker
     volumes:
       - ./storage/tenants:/app/storage/tenants
