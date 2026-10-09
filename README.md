@@ -1,205 +1,110 @@
-# HardTrack Solutions — Rastreador e Monitor de Preços de Hardware
-> **Plataforma SaaS Multi-Tenant de Monitoramento Autônomo e Alertas de Preços em Tempo Real**
+# HardTrack Solutions
+### *Plataforma SaaS Multi-Tenant de Inteligência de Preços e Alertas de Hardware em Tempo Real*
 
-[![CI Pipeline](https://github.com/GuilhermeMachry/Projeto_SAAS/actions/workflows/ci.yml/badge.svg)](https://github.com/GuilhermeMachry/Projeto_SAAS/actions/workflows/ci.yml)
-[![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.14-blue.svg)](https://www.python.org/)
-[![Multi-Tenancy](https://img.shields.io/badge/tenancy-Silo%20JSON%20(TinyDB)-green.svg)](docs/adr/001-tenancy-silo-json.md)
-[![License](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
-
-* **Disciplina:** Arquitetura de Software SAAS (8512) · EC7 · SETREM  
-* **Docente:** Prof. Jonas Pacheco  
-* **Aluno / Unidade de PI:** Guilherme Machry  
-* **Cliente Fictício:** HardTrack Solutions  
-* **Repositório Oficial:** [https://github.com/GuilhermeMachry/Projeto_SAAS](https://github.com/GuilhermeMachry/Projeto_SAAS)
+[![Multi-Tenancy](https://img.shields.io/badge/Tenancy-Silo%20por%20Arquivo%20JSON-blue.svg)](docs/adr/001-tenancy-silo-json.md)
+[![Arquitetura](https://img.shields.io/badge/Arquitetura-Modelo%20C4%20%2B%20DDD-teal.svg)](docs/c4/README.md)
+[![LGPD](https://img.shields.io/badge/Conformidade-LGPD%20Art.%2018%20(Expurgo%20At%C3%B4mico)-green.svg)](docs/lgpd.md)
+[![Defesa Técnica](https://img.shields.io/badge/Etapa%202-N%C3%BAcleo%20Multi--Tenant%20Pronto-brightgreen.svg)](demo_isolamento.py)
+[![Licença](https://img.shields.io/badge/Licen%C3%A7a-MIT-purple.svg)](LICENSE)
 
 ---
 
-## 📌 Status das Entregas do Projeto Integrador
+## 🎯 Sobre o Produto
 
-| Etapa | Foco da Entrega | Prazo | Peso | Status |
-| :---: | :--- | :---: | :---: | :---: |
-| **Etapa 1** | **Proposta de Arquitetura:** C4 Níveis 1, 2 e Esboço 3 + ADRs (1 a 4) + Atributos de Qualidade + LGPD | 26/09/2026 | 20% | ✅ **Concluído** |
-| **Etapa 2** | **Núcleo Multi-Tenant:** Repositório estruturado + CI verde + 2 Serviços (API + Worker) + Isolamento ao vivo + Mapa DDD + ADRs (5 e 6) | 22/10/2026 | 25% | ✅ **Pronto para Defesa** |
-| **Etapa 3** | **Qualidade e Testes:** Suíte no pipeline + Teste de vazamento + Relatório k6 + SLO/SLA | 12/11/2026 | 25% | ⏳ Previsto |
-| **Etapa 4** | **Produto Integrado:** Demo completa + Defesa de Custo Unitário com memória de cálculo | 03/12/2026 | 30% | ⏳ Previsto |
+O **HardTrack Solutions** é uma plataforma SaaS (*Software as a Service*) concebida para automatizar o monitoramento de componentes de informática de alta performance (placas de vídeo, processadores, memórias RAM e unidades de armazenamento).
 
----
+### O Problema que Resolvemos
+O mercado de hardware no Brasil é marcado por **volatilidade contínua de preços**, oscilações bruscas de estoque e promoções relâmpago descentralizadas em múltiplos e-commerces (Kabum, Terabyte, Pichau, Amazon). Consumidores individuais e pequenas montadoras perdem horas realizando checagens manuais diárias e frequentemente perdem lotes promocionais por questão de minutos.
 
-## 📂 Estrutura de Documentação do Projeto (`docs/`)
-
-Em estrito atendimento ao **Guia do Projeto Integrador**, todos os artefatos de arquitetura estão versionados na pasta `docs/`:
-
-```text
-docs/
-├── visao.md                          # 1.1 Visão do Produto, Personas de Tenant e Monetização
-├── atributos.md                      # 1.4 Atributos de Qualidade (Cenários SEI mensuráveis)
-├── lgpd.md                           # 1.5 Mapeamento LGPD e Medidas Técnicas por Camada
-├── c4/                               # 1.2 Modelagem de Arquitetura C4
-│   ├── README.md                     # Visão geral dos Níveis C4 e Limites de Tenancy
-│   ├── diagrama_nivel_1_contexto.html# C4 Nível 1 interativo (Contexto do Sistema)
-│   ├── diagrama_nivel_2_containers.html# C4 Nível 2 interativo (Containers Executáveis)
-│   └── esboco_nivel_3_componentes.md # C4 Nível 3 (Componentes Críticos e Limites de Tenant)
-├── adr/                              # 1.3 e 2.5 Architecture Decision Records
-│   ├── README.md                     # Índice formal dos ADRs
-│   ├── 001-tenancy-silo-json.md      # ADR 001: Silo por Arquivo JSON (Pool vs Schema vs Silo)
-│   ├── 002-stack-python-tinydb.md    # ADR 002: Stack Backend e Persistência NoSQL Embutida
-│   ├── 003-notificacoes-telegram.md  # ADR 003: Notificações Push via Telegram Bot API
-│   ├── 004-ambiente-local-worker.md  # ADR 004: Arquitetura de Execução Local e Agendador
-│   ├── 005-decomposicao-servicos.md  # ADR 005 (Etapa 2): Decomposição em 2 Serviços (API e Worker)
-│   └── 006-comunicacao-resiliencia.md# ADR 006 (Etapa 2): Comunicação Inter-serviços e Resiliência
-└── ddd/                              # 2.4 Mapa de Contextos (Domain-Driven Design)
-    └── mapa_contextos.md             # Bounded Contexts, Context Map e Linguagem Ubíqua
-```
+### A Nossa Proposta de Valor
+A plataforma opera como uma sentinela inteligente e autônoma:
+1. **Varredura Contínua:** Coleta periodicamente os valores praticados pelos e-commerces cadastrados;
+2. **Avaliação Automatizada:** Confronta a cotação em tempo real com a meta de preço estipulada pelo cliente;
+3. **Alertas Instantâneos Push:** Dispara notificações em menos de 1 segundo via **Telegram**, contendo o link da oferta já parametrizado com a tag de afiliados da plataforma para compra imediata.
 
 ---
 
-## 🛠️ Arquitetura dos 2 Serviços em Execução (Etapa 2)
+## 👥 Personas e Modelos de Uso
 
-O núcleo da aplicação é composto por **2 serviços desacoplados** que operam de forma autônoma:
+A arquitetura multi-tenant foi desenhada para atender a dois perfis centrais de clientes com demandas heterogêneas:
 
-```
-                  ┌──────────────────────────────────────────────┐
-                  │                 CLIENTES                     │
-                  │   (Tenant A - B2C)     (Tenant B - B2B)      │
-                  └──────────────┬───────────────────┬───────────┘
-                                 │                   │
-                        HTTP REST│                   │Push Alertas
-                                 ▼                   ▼
-                  ┌────────────────────────┐       ┌────────────────────────┐
-                  │  SERVIÇO 01: API REST  │       │  TELEGRAM BOT GATEWAY  │
-                  │     (FastAPI Gateway)  │       │  (Notificações Push)   │
-                  └──────────────┬─────────┘       └───────────▲────────────┘
-                                 │ Leitura / Escrita           │ Dispara Alerta
-                                 ▼                             │
-                         ┌────────────────────────────────────────┐
-                         │   CAMADA DE SILOS FÍSICOS (TinyDB)     │
-                         │  • storage/tenants/tenant_joao.json    │
-                         │  • storage/tenants/tenant_oficina.json │
-                         └────────────────────────────────────────┘
-                                 ▲
-                                 │ Varredura periódica & Gravação de Histórico
-                  ┌──────────────┴─────────┐
-                  │   SERVIÇO 02: WORKER   │──────► E-commerces (Kabum/Terabyte)
-                  │ (Scraper BeautifulSoup)│        Requisições HTTP com Retry Exponencial
-                  └────────────────────────┘
-```
-
-1. **Serviço 01 — API REST Gateway (`src/api/`):**
-   * Implementado em **FastAPI**;
-   * Responsável por onboarding de tenants, cadastro de metas de preço e consultas;
-   * Endpoint de expurgo atômico LGPD (`DELETE /tenants/{id}`);
-   * Sanitização rigorosa de `tenant_id` impedindo ataques de *Path Traversal*.
-2. **Serviço 02 — Worker Autônomo de Scraping (`src/worker/`):**
-   * Motor de varredura periódica assíncrona;
-   * Scraping resiliente com **BeautifulSoup4** (timeout estrito de 5s e até 3 retries exponenciais);
-   * Comparação do valor coletado contra o preço-alvo do tenant;
-   * Despacho de alertas com links parametrizados de afiliados (`affiliate_tag`).
+| Persona | Perfil do Cliente | Volume Monitorado | Principal Necessidade |
+| :--- | :--- | :---: | :--- |
+| **Tenant A** | **Consumidor Final / Gamer (B2C)** | 1 a 5 URLs simultâneas | Alertas diretos no smartphone sem instalação de apps pesados, foco em desconto direto para montagem pessoal. |
+| **Tenant B** | **Oficina / Montadora Local (B2B)** | 20 a 50 URLs simultâneas | Cotação em lote para reposição de estoque, acompanhamento de margens de revenda e histórico cronológico de flutuação de mercado. |
 
 ---
 
-## 🚀 Como Rodar o Projeto no Ambiente Local
+## 💡 Modelo de Negócio e Sustentabilidade
 
-### Pré-requisitos
-* Python 3.10+ (ou Docker / Docker Compose)
-* Git instalado
+A plataforma estrutura sua sustentabilidade financeira em três pilares complementares:
+* **Marketing de Afiliados:** Receita gerada por comissão sobre conversões a partir dos links de alerta enriquecidos com tags comerciais;
+* **Planos por Assinatura (Freemium & B2B Pro):** Modalidade gratuita com limite de links e periodicidade padrão; modalidade Pro com prioridade de fila e cotas ilimitadas;
+* **Inteligência de Mercado:** Agregação anonimizada de séries históricas para geração de relatórios de tendências sazonais de preço.
 
-### 1. Clonar e Instalar Dependências
+---
+
+## 🏛️ Destaques da Engenharia de Software
+
+O desenvolvimento segue rigorosas práticas de engenharia de software e padrões de arquitetura SaaS:
+
+* **Isolamento Físico de Tenancy (Silo por Arquivo):**  
+  Cada cliente opera sobre um silo de dados independente (`storage/tenants/tenant_<id>.json`), garantindo segregação total, zero risco de vazamento cruzado e eliminação do overhead de servidores de banco relacionais.
+* **Decomposição em 2 Serviços Independentes:**  
+  * **Serviço 01 (API REST Gateway):** Interface interativa em FastAPI para onboarding, gestão de metas e histórico.
+  * **Serviço 02 (Worker Autônomo):** Processo em background com motor BeautifulSoup4 resiliente (timeout de 5s, retries com Exponential Backoff e 0% crashes).
+* **Privacidade e LGPD por Design:**  
+  Coleta estritamente minimizada (Telegram Chat ID e URLs de hardware) sob a base legal de Execução de Contrato (Art. 7º, V) e mecanismo de **expurgo atômico** em atendimento ao Artigo 18 da LGPD.
+
+---
+
+## 📚 Documentação do Projeto
+
+Toda a documentação técnica exigida pelo Guia do Projeto Integrador está organizada na pasta [`docs/`](docs/):
+
+| Documento | Descrição do Conteúdo |
+| :--- | :--- |
+| 📖 **[Visão do Produto](docs/visao.md)** | Problema de mercado, proposta de valor, personas detalhadas e monetização. |
+| 📐 **[Modelagem C4](docs/c4/README.md)** | Diagramas interativos de [Contexto (Nível 1)](docs/c4/diagrama_nivel_1_contexto.html), [Containers (Nível 2)](docs/c4/diagrama_nivel_2_containers.html) e [Componentes Críticos (Nível 3)](docs/c4/esboco_nivel_3_componentes.md). |
+| 📝 **[Decisões Arquiteturais (ADRs)](docs/adr/README.md)** | Registros formais de decisões (ADR 001 a 006) comparando opções, números e custos em R$. |
+| 🎯 **[Atributos de Qualidade](docs/atributos.md)** | Cenários mensuráveis padrão SEI/Len Bass (Desempenho, Confiabilidade e Auditabilidade). |
+| 🛡️ **[Mapeamento LGPD](docs/lgpd.md)** | Inventário de dados pessoais, minimização, medidas de segurança em 4 camadas e expurgo. |
+| 🗺️ **[Mapa de Contextos DDD](docs/ddd/mapa_contextos.md)** | Bounded Contexts, mapa de relações Upstream/Downstream e glossário de Linguagem Ubíqua. |
+| 🤖 **[Declaração de Uso de IA](docs/uso-de-ia.md)** | Registro de transparência das ferramentas de IA utilizadas, escopo e julgamento crítico. |
+
+---
+
+## ⚡ Demonstração Rápida e Execução
+
+### 1. Como Rodar a Demonstração ao Vivo do Isolamento (Etapa 2)
+Para a banca examinadora e avaliação técnica presencial, foi disponibilizado um script automatizado que valida o isolamento de tenancy de ponta a ponta:
 
 ```bash
-git clone https://github.com/GuilhermeMachry/Projeto_SAAS.git
-cd Projeto_SAAS
-
-# Criar e ativar ambiente virtual
-python3 -m venv .venv
+# 1. Ativar o ambiente virtual
 source .venv/bin/activate
 
-# Instalar dependências
-pip install -r requirements.txt
-```
-
----
-
-## 🎯 Demonstração ao Vivo do Isolamento (Checklist da Etapa 2)
-
-Para a **Defesa Técnica ao Vivo** diante do docente, execute o script interativo que comprova os 6 requisitos essenciais de Tenancy e LGPD:
-
-```bash
+# 2. Executar a demonstração interativa
 python demo_isolamento.py
 ```
 
-### O que o script valida e imprime na tela:
-1. **Criação de 2 Tenants Heterogêneos:** Cria `tenant_joao_b2c` (B2C) e `tenant_techparts_b2b` (B2B);
-2. **Persistência em Silos Físicos Separados:** Mostra os arquivos `tenant_joao_b2c.json` e `tenant_techparts_b2b.json` criados em disco;
-3. **Prova Matemática de Isolamento de Leitura:** Consulta com a credencial de A retorna apenas o componente de A (zero dados de B); consulta com a credencial de B retorna apenas o componente de B (zero dados de A);
-4. **Ciclo do Worker Isolado:** Executa o scraping e grava o histórico exclusivamente dentro do silo correspondente de cada tenant;
-5. **Teste de Segurança:** Tenta injetar `../../etc/passwd` e comprova o bloqueio imediato contra Path Traversal;
-6. **Expurgo LGPD (Art. 18):** Exclui o Tenant A e comprova que seu arquivo foi deletado, enquanto o Tenant B permanece 100% íntegro.
+O script demonstra em 6 etapas: criação de 2 tenants em silos distintos, comprovação matemática de que Tenant A não lê Tenant B, execução do ciclo de varredura, bloqueio contra injeção de *Path Traversal* e expurgo LGPD.
 
----
-
-## 🧪 Execução da Suíte de Testes Automatizada
-
-Os testes validam a integridade dos silos, endpoints da API e a resiliência do Worker:
-
+### 2. Como Rodar os Testes Automatizados
 ```bash
 pytest -v
 ```
+*(Executa a suíte de 12 testes validando isolamento, regras de negócio e resiliência).*
 
-Resultado esperado: **12 testes passando (100% verde)**:
-```text
-tests/test_api_service.py::test_api_healthcheck PASSED
-tests/test_api_service.py::test_create_and_get_tenant PASSED
-tests/test_api_service.py::test_add_and_list_targets_by_tenant PASSED
-tests/test_api_service.py::test_cross_tenant_api_isolation PASSED
-tests/test_api_service.py::test_delete_tenant_lgpd_endpoint PASSED
-tests/test_tenant_isolation.py::test_tenant_creation_and_file_isolation PASSED
-tests/test_tenant_isolation.py::test_cross_tenant_isolation_read PASSED
-tests/test_tenant_isolation.py::test_path_traversal_prevention PASSED
-tests/test_tenant_isolation.py::test_lgpd_atomic_delete PASSED
-tests/test_worker_resilience.py::test_parse_price_formats PASSED
-tests/test_worker_resilience.py::test_scraper_resilience_on_failure PASSED
-tests/test_worker_resilience.py::test_worker_cycle_triggers_alert_and_records_history PASSED
-```
+### 3. Como Subir os 2 Serviços
+* **Opção Direta:** Inicie a API (`python -m uvicorn src.api.main:app --port 8000`) e o Worker (`python -m src.worker.runner --interval 60`) em terminais separados.
+* **Opção Docker:** Suba ambos com um comando único via `docker compose up --build`.
 
 ---
 
-## 🖥️ Executando os 2 Serviços
+## 👨‍💻 Informações Acadêmicas
 
-### Opção A: Execução Local Direta (2 Terminais)
-
-* **Terminal 1 — API REST Gateway:**
-  ```bash
-  python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
-  ```
-  * Swagger UI interativo: `http://localhost:8000/docs`
-  * Healthcheck: `http://localhost:8000/health`
-
-* **Terminal 2 — Background Worker:**
-  ```bash
-  python -m src.worker.runner --interval 60
-  # Ou para uma execução única sob demanda:
-  python -m src.worker.runner --once
-  ```
-
----
-
-### Opção B: Execução via Docker Compose (Comando Único)
-
-```bash
-docker compose up --build
-```
-Ambos os containers (`hardtrack_api` e `hardtrack_worker`) sobem em conjunto compartilhando o volume dos silos de dados.
-
----
-
-## 📋 Checklist de Aceite da Etapa 2 (Auto-Conferência)
-
-- [x] **Demo do isolamento entre 2 tenants, ao vivo, na defesa técnica do dia** (`demo_isolamento.py`)
-- [x] **Comunicação entre os 2 serviços justificada em ADR** (`docs/adr/006-comunicacao-resiliencia.md`)
-- [x] **Pipeline base verde no repositório** (`ci/ci.yml` / GitHub Actions)
-- [x] **Mapa de contextos coerente com o C4 da Etapa 1** (`docs/ddd/mapa_contextos.md`)
-- [x] **Degrau Alto Alcançado:**
-  - Resiliência básica demonstrada (timeout + retry exponencial + 0% crashes)
-  - Isolamento testado rigorosamente na camada de dados e de API
-  - Linguagem ubíqua evidente no código
-  - Alternativas descartadas justificadas com números nos ADRs
+* **Instituição:** SETREM — Sociedade Educacional Três de Maio  
+* **Curso:** Engenharia de Computação (EC7)  
+* **Disciplina:** Arquitetura de Software SAAS (8512) · 2026-2  
+* **Professor:** Jonas Pacheco (`@jonasrpacheco86`)  
+* **Aluno:** Guilherme Machry (`@GuilhermeMachry`)
