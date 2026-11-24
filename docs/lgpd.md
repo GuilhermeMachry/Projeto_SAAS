@@ -48,7 +48,23 @@ A estratégia de segurança adota o princípio de **Defesa em Profundidade** (*D
 ## 4. Procedimento para Atendimento aos Direitos do Titular (Art. 18)
 
 Para atender ao direito de eliminação e revogação do consentimento:
-1. O usuário solicita a exclusão através do endpoint `DELETE /tenants/{tenant_id}`;
-2. A API valida a autorização e chama `TenantStorageManager.delete_tenant(tenant_id)`;
-3. O arquivo `tenant_<tenant_id>.json` é removido imediatamente do disco;
+1. O usuário autenticado solicita a exclusão através do endpoint `DELETE /tenants/{tenant_id}` (com Bearer token válido do próprio tenant);
+2. A API valida a autorização (`require_tenant_access`), impedindo que terceiros excluam dados de outro titular, e chama `TenantStorageManager.delete_tenant(tenant_id)`;
+3. O arquivo `tenant_<tenant_id>.json` é removido imediatamente do disco sob trava exclusiva;
 4. Nenhum resíduo de histórico, chat ID ou URLs permanece armazenado no sistema.
+
+---
+
+## 5. Status de Implementação das Medidas Técnicas LGPD (Revisão Etapa 3)
+
+| Medida Técnica LGPD | Camada | Status Atual | Prazo / Evidência |
+| :--- | :--- | :---: | :--- |
+| Segregação física em silo por tenant (`tenant_<id>.json`) | Armazenamento | ✅ **Implementado** | Validado em `tests/test_tenant_isolation.py` |
+| Permissões restritas POSIX (`chmod 0o600`) nos silos | Armazenamento | ✅ **Implementado** | Aplicado em `src/core/storage.py` e testado via `stat.S_IMODE` |
+| Expurgo atômico definitivo (Art. 18 — `DELETE /tenants/{id}`) | Armazenamento / API | ✅ **Implementado** | Validado em `test_lgpd_atomic_delete_isolation` e na UI (`/app`) |
+| AuthZ estrito por tenant (HMAC-SHA256) bloqueando IDOR | Aplicação / API | ✅ **Implementado** | Aplicado em `src/api/auth.py` (Etapa 3.5) |
+| Sanitização anti-Path Traversal + validação anti-SSRF | Aplicação / API | ✅ **Implementado** | Aplicado em `src/core/security.py` e `src/core/models.py` |
+| Execução com usuário não-root nos containers (`1000:1000`) | Host / Docker | ✅ **Implementado** | Configurado em `docker-compose.yml` |
+| Portabilidade automatizada dos dados do titular (Art. 18, V — exportação CSV/JSON completa) | API / Interface | ✅ **Implementado (Parcial B2B CSV)** / 🗓️ **Completo em 03/12/2026** | Exportação CSV ativa no painel B2B; endpoint unificado `GET /tenants/{id}/export` planejado para Etapa 4 (03/12/2026) |
+| Criptografia em repouso (*encryption-at-rest* com chave por tenant / AES-GCM) | Armazenamento | 🗓️ **Planejado** | Planejado para evolução pós-MVP / produção em nuvem (Q1/2027), após definição de KMS na Etapa 4 |
+| Política automatizada de retenção e expurgo de histórico > 90 dias | Worker / Storage | 🗓️ **Planejado** | Job de compactação/expurgo cronológico planejado para Etapa 4 (03/12/2026) |

@@ -4,7 +4,8 @@
 [![Multi-Tenancy](https://img.shields.io/badge/Tenancy-Silo%20por%20Arquivo%20JSON-blue.svg)](docs/adr/001-tenancy-silo-json.md)
 [![Arquitetura](https://img.shields.io/badge/Arquitetura-Modelo%20C4%20%2B%20DDD-teal.svg)](docs/c4/README.md)
 [![LGPD](https://img.shields.io/badge/Conformidade-LGPD%20Art.%2018%20(Expurgo%20At%C3%B4mico)-green.svg)](docs/lgpd.md)
-[![Defesa Técnica](https://img.shields.io/badge/Etapa%202-N%C3%BAcleo%20Multi--Tenant%20Pronto-brightgreen.svg)](scripts/demo_isolamento.py)
+[![Defesa Técnica](https://img.shields.io/badge/Etapa%203-Qualidade%2C%20k6%20%26%20Seguran%C3%A7a-brightgreen.svg)](docs/qualidade-e-testes.md)
+[![SLO](https://img.shields.io/badge/SLO-p95%20%3C%20150ms%20%7C%20Erro%20%3C%201%25-informational.svg)](docs/slo.md)
 [![Licença](https://img.shields.io/badge/Licen%C3%A7a-MIT-purple.svg)](LICENSE)
 
 ---
@@ -70,7 +71,12 @@ Toda a documentação técnica exigida pelo Guia do Projeto Integrador está org
 | 🎯 **[Atributos de Qualidade](docs/atributos.md)** | Cenários mensuráveis padrão SEI/Len Bass (Desempenho, Confiabilidade e Auditabilidade). |
 | 🛡️ **[Mapeamento LGPD](docs/lgpd.md)** | Inventário de dados pessoais, minimização, medidas de segurança em 4 camadas e expurgo. |
 | 🗺️ **[Mapa de Contextos DDD](docs/ddd/mapa_contextos.md)** | Bounded Contexts, mapa de relações Upstream/Downstream e glossário de Linguagem Ubíqua. |
-| 🤖 **[Declaração de Uso de IA](docs/uso-de-ia.md)** | Registro de transparência das ferramentas de IA utilizadas, escopo e julgamento crítico. |
+| 📊 **[SLO / SLA do Produto](docs/slo.md)** | Metas mensuráveis (`p95 < 150 ms`, erro `< 1%`), premissa de pico (`20 VUs`) e limiares k6 (Entregável 3.4 + Ficha Enc. 16). |
+| 🚀 **[Relatório de Carga (k6)](docs/carga-enc14.md)** | Resultado real do k6 no pico (`p95 = 61,51 ms`, `0%` erro) vs. SLO + análise de gargalo sob estresse (`p95 = 204,83 ms`). |
+| 🧪 **[Qualidade, Testes & CI](docs/qualidade-e-testes.md)** | Suíte de 44 testes (unidade, integração, contrato API↔Worker, 9 vetores de isolamento) e demo de falha no CI. |
+| 🔐 **[Verificação de Segurança](docs/seguranca.md)** | Checklist completo (AuthZ HMAC-SHA256, SSRF, CORS, secrets, dependências) e 3 achados reais corrigidos. |
+| 📋 **[Ficha SLO Preenchida (Enc. 16)](docs/ficha-slo-enc16-preenchida.md)** | Transcrição das 6 respostas da atividade do Encontro 16 (também disponível em [`ficha-slo-enc16-1911-preenchida.docx`](ficha-slo-enc16-1911-preenchida.docx)). |
+| 🤖 **[Declaração de Uso de IA](docs/uso-de-ia.md)** | Registro de transparência das ferramentas de IA utilizadas nas Etapas 2 e 3, escopo e julgamento crítico. |
 
 ---
 
@@ -94,29 +100,38 @@ O projeto segue estritamente a convenção de repositórios SaaS, centralizando 
 
 ---
 
-## ⚡ Demonstração Rápida e Execução
+## ⚡ Demonstração Rápida, Interface Nativa e Execução
 
-### 1. Como Rodar a Demonstração ao Vivo do Isolamento (Etapa 2)
-Para a banca examinadora e avaliação técnica presencial, execute o script automatizado que valida o isolamento de tenancy de ponta a ponta:
+### 1. Como Abrir a Interface Web Interativa Nativa (Perfis B2C + B2B + Lab de Segurança)
+Roda 100% nativamente em Python/FastAPI (sem Node/npm), já com os dois perfis do SaaS (**Tenant A — João B2C Gamer** e **Tenant B — Oficina TechParts B2B**) e laboratório interativo de segurança:
 
 ```bash
-# 1. Ativar o ambiente virtual
-source .venv/bin/activate
-
-# 2. Executar a demonstração interativa
-python scripts/demo_isolamento.py
+# Inicia a API + Interface Web Nativa e abre automaticamente no navegador
+.venv/bin/python run_app.py
+# Acesse: http://127.0.0.1:8000/app
 ```
 
-O script demonstra em 6 etapas: criação de 2 tenants em silos distintos, comprovação matemática de que Tenant A não lê Tenant B, execução do ciclo de varredura, bloqueio contra injeção de *Path Traversal* e expurgo LGPD.
-
-### 2. Como Rodar os Testes Automatizados
+### 2. Como Rodar a Suíte de Testes (Etapa 3 — 44 Testes) e Auditoria de Segurança
 ```bash
-pytest -v
-```
-*(Executa a suíte de 12 testes validando isolamento, regras de negócio e resiliência).*
+# Suíte completa (unitários, integração, contrato API↔Worker, isolamento multi-vetor e segurança)
+.venv/bin/pytest -v
 
-### 3. Como Subir os 2 Serviços
-* **Opção Direta:** Inicie a API (`python -m uvicorn src.api.main:app --port 8000`) e o Worker (`python -m src.worker.runner --interval 60`) em terminais separados.
+# Auditoria automatizada de segurança (secrets, CORS, cobertura AuthZ, dependências)
+.venv/bin/python scripts/security_audit.py
+
+# Demonstração controlada de que o pipeline quebra quando um teste falha (Etapa 3.1)
+./scripts/demo_pipeline_fail.sh
+```
+
+### 3. Como Rodar o Teste de Carga k6 (Etapa 3.3)
+```bash
+# Com a API rodando na porta 8000:
+docker run --rm --network host -v "$(pwd)/tests/load:/scripts:ro" grafana/k6 run /scripts/carga.js
+```
+
+### 4. Como Rodar a Demonstração de Isolamento e os 2 Serviços
+* **Demo de Isolamento CLI:** `.venv/bin/python scripts/demo_isolamento.py`
+* **Opção Direta:** Inicie a API (`.venv/bin/python -m uvicorn src.api.main:app --port 8000`) e o Worker (`.venv/bin/python -m src.worker.runner --interval 60`) em terminais separados.
 * **Opção Docker:** Suba ambos com um comando único via `docker compose up --build`.
 
 ---

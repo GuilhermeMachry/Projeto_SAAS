@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HardTrack Solutions — Plataforma SaaS Multi-Tenant de Hardware</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body class="theme-b2c">
+  <!-- Top Navigation -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">HT</div>
+      <div>
+        <div class="brand-title">HardTrack Solutions</div>
+        <div class="brand-sub">SaaS Multi-Tenant · Silo JSON (TinyDB) · AuthZ HMAC-SHA256</div>
+      </div>
+    </div>
+
+    <nav class="mode-switcher" role="tablist" aria-label="Alternar perfil SaaS">
+      <button id="tab-b2c" class="mode-btn active" data-view="b2c" role="tab">
+        <span class="pill-dot dot-b2c"></span>
+        <span>
+          <strong>Tenant A · B2C</strong>
+          <small>João Silva (Gamer)</small>
+        </span>
+      </button>
+      <button id="tab-b2b" class="mode-btn" data-view="b2b" role="tab">
+        <span class="pill-dot dot-b2b"></span>
+        <span>
+          <strong>Tenant B · B2B</strong>
+          <small>Oficina TechParts</small>
+        </span>
+      </button>
+      <button id="tab-compare" class="mode-btn" data-view="compare" role="tab">
+        <span class="pill-dot dot-sec"></span>
+        <span>
+          <strong>Visão Dupla &amp; Segurança</strong>
+          <small>Isolamento + LGPD</small>
+        </span>
+      </button>
+    </nav>
+
+    <div class="telemetry-bar">
+      <div class="tel-pill" id="health-pill" title="Status do Serviço API Gateway">
+        <span class="status-dot"></span>
+        <span id="health-text">Conectando...</span>
+      </div>
+      <div class="tel-pill" id="latency-pill" title="Última latência medida vs SLO (p95 < 150ms)">
+        <span>SLO &lt;150ms:</span>
+        <strong id="latency-value">— ms</strong>
+      </div>
+      <a class="docs-link" href="/docs" target="_blank" rel="noopener">Swagger API ↗</a>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="container">
+    <!-- Custom Tenant Banner (shown when viewing a newly created tenant) -->
+    <div id="custom-tenant-bar" class="custom-banner hidden">
+      <div>
+        <span class="badge badge-info">Tenant Personalizado Ativo</span>
+        <strong id="custom-tenant-label"></strong>
+      </div>
+      <div class="banner-actions">
+        <button id="btn-purge-custom" class="btn btn-danger btn-sm">🗑️ Expurgo LGPD (Art. 18)</button>
+        <button id="btn-back-default" class="btn btn-ghost btn-sm">Voltar aos Perfis Demo</button>
+      </div>
+    </div>
+
+    <!-- ==================== VIEW 1: TENANT A (B2C GAMER) ==================== -->
+    <section id="view-b2c" class="view-section">
+      <div class="hero-card hero-b2c">
+        <div class="hero-left">
+          <div class="hero-badges">
+            <span class="badge badge-b2c">PERFIL B2C · CONSUMIDOR FINAL / GAMER</span>
+            <span class="badge badge-outline" id="b2c-plan-badge">Plano Freemium · Até 5 URLs</span>
+            <span class="badge badge-sec" id="b2c-silo-badge">Silo: tenant_joao_b2c.json (0o600)</span>
+          </div>
+          <h1 id="b2c-tenant-name">João Silva (Gamer / B2C)</h1>
+          <p class="hero-desc">
+            Monitoramento pessoal de componentes para upgrade de PC com alertas instantâneos no smartphone via Telegram e link direto de oferta.
+          </p>
+          <div class="quota-box">
+            <div class="quota-header">
+              <span>Cota do Plano B2C</span>
+              <strong id="b2c-quota-text">0 / 5 URLs</strong>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill fill-b2c" id="b2c-quota-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-right">
+          <div class="mini-stat">
+            <span>Chat ID Telegram</span>
+            <strong id="b2c-chat-id">11223344</strong>
+          </div>
+          <div class="mini-stat">
+            <span>Alertas Recebidos</span>
+            <strong id="b2c-alerts-count">0</strong>
+          </div>
+          <div class="mini-stat">
+            <span>Tamanho do Silo</span>
+            <strong id="b2c-silo-size">0 KB</strong>
+          </div>
+          <div class="hero-cta-group">
+            <button class="btn btn-primary" id="btn-b2c-scan">⚡ Rodar Varredura Agora</button>
+            <button class="btn btn-secondary" id="btn-b2c-add">+ Monitorar Peça</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monitored Components Grid (B2C Card View) -->
+      <div class="section-header">
+        <div>
+          <h2>🎮 Minhas Peças Monitoradas</h2>
+          <p class="muted">Isolamento estrito: exibindo apenas itens gravados no silo físico deste cliente B2C.</p>
+        </div>
+        <div class="quick-presets">
+          <span class="muted">Presets rápidos:</span>
+          <button class="chip" data-preset="b2c" data-name="GeForce RTX 4070 Super 12GB" data-url="mock://kabum.com.br/rtx4070super?price=3899.00" data-target="4000">+ RTX 4070 Super</button>
+          <button class="chip" data-preset="b2c" data-name="AMD Ryzen 5 7600 AM5" data-url="mock://pichau.com.br/ryzen57600?price=1299.00" data-target="1250">+ Ryzen 5 7600</button>
+          <button class="chip" data-preset="b2c" data-name="Memória DDR5 32GB 6000MHz" data-url="mock://terabyte.com.br/ddr5-32gb?price=699.90" data-target="750">+ DDR5 32GB</button>
+        </div>
+      </div>
+
+      <div id="b2c-targets-grid" class="cards-grid"></div>
+
+      <!-- Charts & Telegram Push Preview -->
+      <div class="two-col-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>📈 Histórico de Cotações (Silo B2C)</h3>
+            <span class="muted" id="b2c-history-count">0 leituras</span>
+          </div>
+          <div id="b2c-chart" class="chart-box"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3>📲 Último Alerta Push no Telegram</h3>
+            <span class="badge badge-success">Canal Ativo · &lt;800ms</span>
+          </div>
+          <div id="b2c-telegram-preview" class="telegram-phone"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: TENANT B (B2B OFICINA) ==================== -->
+    <section id="view-b2b" class="view-section hidden">
+      <div class="hero-card hero-b2b">
+        <div class="hero-left">
+          <div class="hero-badges">
+            <span class="badge badge-b2b">PERFIL B2B · OFICINA / MONTADORA LOCAL</span>
+            <span class="badge badge-outline" id="b2b-plan-badge">Plano B2B Pro · Até 50 URLs · Fila 15min</span>
+            <span class="badge badge-sec" id="b2b-silo-badge">Silo: tenant_techparts_b2b.json (0o600)</span>
+          </div>
+          <h1 id="b2b-tenant-name">Oficina TechParts (Montadora / B2B)</h1>
+          <p class="hero-desc">
+            Central de compras e reposição de estoque em lote: acompanhe margens de revenda, simule lotes de montagem e exporte o histórico cronológico para auditoria.
+          </p>
+          <div class="quota-box">
+            <div class="quota-header">
+              <span>Cota Corporativa B2B Pro</span>
+              <strong id="b2b-quota-text">0 / 50 URLs</strong>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill fill-b2b" id="b2b-quota-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-right">
+          <div class="batch-selector">
+            <label for="b2b-batch-qty">Simulador de Lote:</label>
+            <select id="b2b-batch-qty">
+              <option value="5">5 unidades / peça</option>
+              <option value="10" selected>10 unidades / peça</option>
+              <option value="20">20 unidades / peça</option>
+            </select>
+          </div>
+          <div class="hero-cta-group">
+            <button class="btn btn-b2b" id="btn-b2b-scan">⚡ Varredura em Lote</button>
+            <button class="btn btn-secondary" id="btn-b2b-add">+ Novo Item Estoque</button>
+            <button class="btn btn-ghost" id="btn-b2b-csv">📥 Exportar CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- B2B KPI Strip -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span class="kpi-label">Componentes Monitorados</span>
+          <strong class="kpi-value" id="b2b-kpi-targets">0</strong>
+          <small class="muted">Limite: 50 URLs simultâneas</small>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Oportunidades p/ Compra</span>
+          <strong class="kpi-value text-success" id="b2b-kpi-hits">0</strong>
+          <small class="muted">Cotação &le; Preço-Alvo</small>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Economia Projetada no Lote</span>
+          <strong class="kpi-value text-amber" id="b2b-kpi-savings">R$ 0,00</strong>
+          <small class="muted" id="b2b-kpi-batch-label">Calculado para lote de 10 un.</small>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Silo &amp; Auditoria</span>
+          <strong class="kpi-value" id="b2b-kpi-alerts">0 alertas</strong>
+          <small class="muted" id="b2b-kpi-size">0 KB · chmod 0o600</small>
+        </div>
+      </div>
+
+      <!-- B2B Table -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>🏭 Painel de Reposição de Estoque (B2B)</h2>
+            <p class="muted">Tabela operacional exclusiva da Oficina TechParts com cálculo de margem de compra.</p>
+          </div>
+          <div class="quick-presets">
+            <button class="chip" data-preset="b2b" data-name="Placa-Mãe B650M AM5 Wi-Fi" data-url="mock://kabum.com.br/b650m?price=980.00" data-target="1050">+ B650M AM5</button>
+            <button class="chip" data-preset="b2b" data-name="Fonte 850W 80 Plus Gold" data-url="mock://pichau.com.br/psu850w?price=549.00" data-target="580">+ Fonte 850W</button>
+            <button class="chip" data-preset="b2b" data-name="Water Cooler 360mm ARGB" data-url="mock://terabyte.com.br/wc360?price=499.00" data-target="450">+ Water Cooler</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Componente de Hardware</th>
+                <th>Loja / Fonte</th>
+                <th>Cotação Atual</th>
+                <th>Meta B2B</th>
+                <th>Economia Lote</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="b2b-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="two-col-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>📊 Evolução de Preços de Estoque</h3>
+            <span class="muted" id="b2b-history-count">0 registros</span>
+          </div>
+          <div id="b2b-chart" class="chart-box"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3>📋 Auditoria de Alertas B2B</h3>
+            <span class="badge badge-b2b">Chat ID: <span id="b2b-chat-id">99887766</span></span>
+          </div>
+          <div id="b2b-alerts-list" class="alerts-feed"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: COMPARE & SECURITY LAB ==================== -->
+    <section id="view-compare" class="view-section hidden">
+      <div class="hero-card hero-sec">
+        <div class="hero-left">
+          <div class="hero-badges">
+            <span class="badge badge-sec">PROVA AO VIVO · ETAPA 3 (QUALIDADE &amp; SEGURANÇA)</span>
+            <span class="badge badge-outline">Silo Físico + HMAC-SHA256 + Anti-SSRF + LGPD Art. 18</span>
+          </div>
+          <h1>Visão Multi-Tenant Lado a Lado &amp; Laboratório de Segurança</h1>
+          <p class="hero-desc">
+            Compare simultaneamente os dois perfis do SaaS em seus silos físicos independentes e execute ataques simulados contra a API real para comprovar o bloqueio de vazamento entre tenants.
+          </p>
+        </div>
+        <div class="hero-right">
+          <button class="btn btn-primary" id="btn-refresh-compare">🔄 Atualizar Ambos os Silos</button>
+        </div>
+      </div>
+
+      <!-- Side-by-Side Comparison -->
+      <div class="two-col-grid">
+        <div class="panel compare-panel compare-b2c">
+          <div class="panel-header">
+            <div>
+              <span class="badge badge-b2c">TENANT A · B2C GAMER</span>
+              <h3 id="cmp-b2c-title">joao_b2c</h3>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="switchView('b2c')">Abrir Painel B2C →</button>
+          </div>
+          <div id="cmp-b2c-meta" class="silo-meta-box"></div>
+          <h4>Componentes Isolados no Silo A:</h4>
+          <ul id="cmp-b2c-items" class="clean-list"></ul>
+        </div>
+
+        <div class="panel compare-panel compare-b2b">
+          <div class="panel-header">
+            <div>
+              <span class="badge badge-b2b">TENANT B · B2B OFICINA</span>
+              <h3 id="cmp-b2b-title">techparts_b2b</h3>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="switchView('b2b')">Abrir Painel B2B →</button>
+          </div>
+          <div id="cmp-b2b-meta" class="silo-meta-box"></div>
+          <h4>Componentes Isolados no Silo B:</h4>
+          <ul id="cmp-b2b-items" class="clean-list"></ul>
+        </div>
+      </div>
+
+      <!-- Interactive Security Probe Lab -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>🛡️ Laboratório Interativo de Segurança &amp; Isolamento (Chamadas Reais HTTP)</h2>
+            <p class="muted">Cada botão envia uma requisição maliciosa real à API FastAPI e exibe o código HTTP e o payload de bloqueio.</p>
+          </div>
+        </div>
+        <div class="probe-grid">
+          <button class="probe-btn" id="probe-idor">
+            <strong>1. Invasão Cross-Tenant (IDOR)</strong>
+            <span>Token de <code>joao_b2c</code> → <code>GET /tenants/techparts_b2b/targets</code></span>
+            <small>Esperado: HTTP 403 Forbidden</small>
+          </button>
+          <button class="probe-btn" id="probe-spoof">
+            <strong>2. Header Spoofing (X-Tenant-ID)</strong>
+            <span>Token de <code>joao_b2c</code> + header forjado <code>techparts_b2b</code></span>
+            <small>Esperado: HTTP 403 Forbidden</small>
+          </button>
+          <button class="probe-btn" id="probe-noauth">
+            <strong>3. Acesso Sem Autenticação</strong>
+            <span><code>GET /tenants/joao_b2c/targets</code> sem Bearer Token</span>
+            <small>Esperado: HTTP 401 Unauthorized</small>
+          </button>
+          <button class="probe-btn" id="probe-ssrf">
+            <strong>4. Ataque SSRF (Cloud Metadata)</strong>
+            <span><code>POST /targets</code> com <code>http://169.254.169.254/latest/meta-data/</code></span>
+            <small>Esperado: HTTP 422 Bloqueado</small>
+          </button>
+          <button class="probe-btn" id="probe-traversal">
+            <strong>5. Path Traversal no Silo</strong>
+            <span><code>POST /tenants</code> com <code>tenant_id: "../etc/passwd"</code></span>
+            <small>Esperado: HTTP 400 Bad Request</small>
+          </button>
+        </div>
+        <div class="terminal-box" id="probe-output">
+          <div class="terminal-head">Saída HTTP em Tempo Real (clique em qualquer teste acima)</div>
+          <pre id="probe-log">Aguardando execução de teste de segurança...</pre>
+        </div>
+      </div>
+
+      <!-- Onboarding New Tenant & LGPD Purge -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>👤 Onboarding de Novo Tenant &amp; Expurgo LGPD (Art. 18)</h2>
+            <p class="muted">Crie um novo cliente B2C ou B2B, gere seu silo físico <code>tenant_&lt;id&gt;.json</code> + token Bearer e teste o expurgo atômico.</p>
+          </div>
+        </div>
+        <form id="form-new-tenant" class="inline-form">
+          <div class="field">
+            <label for="nt-id">Tenant ID (slug)</label>
+            <input id="nt-id" type="text" placeholder="ex: loja_alfa_b2b" required minlength="3" />
+          </div>
+          <div class="field">
+            <label for="nt-nome">Nome / Razão Social</label>
+            <input id="nt-nome" type="text" placeholder="ex: Alfa Hardware Ltda" required minlength="2" />
+          </div>
+          <div class="field">
+            <label for="nt-tipo">Tipo de Usuário SaaS</label>
+            <select id="nt-tipo">
+              <option value="B2C_ENTUSIASTA">B2C — Consumidor Final / Gamer (5 URLs)</option>
+              <option value="B2B_OFICINA">B2B — Oficina / Montadora (50 URLs)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="nt-chat">Telegram Chat ID</label>
+            <input id="nt-chat" type="text" placeholder="ex: 55443322" required minlength="3" />
+          </div>
+          <div class="field field-btn">
+            <button type="submit" class="btn btn-primary">+ Criar Tenant &amp; Abrir Painel</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Add / Edit Hardware Component -->
+  <div id="modal-target" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Cadastrar Componente Monitorado</h3>
+        <button class="icon-btn" id="modal-close" aria-label="Fechar">✕</button>
+      </div>
+      <form id="form-target" class="modal-form">
+        <input type="hidden" id="ft-mode" value="create" />
+        <input type="hidden" id="ft-id" value="" />
+        <div class="field">
+          <label for="ft-name">Nome do Componente de Hardware</label>
+          <input id="ft-name" type="text" placeholder="ex: GeForce RTX 4070 Ti Super 16GB" required minlength="2" />
+        </div>
+        <div class="field">
+          <label for="ft-url">URL da Loja (aceita https:// ou mock://loja/item?price=2199.00)</label>
+          <input id="ft-url" type="text" placeholder="mock://kabum.com.br/rtx4070?price=3799.00" required />
+        </div>
+        <div class="field">
+          <label for="ft-price">Preço-Alvo Desejado (R$)</label>
+          <input id="ft-price" type="number" step="0.01" min="1" placeholder="3900.00" required />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="modal-cancel">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="modal-submit">Salvar no Silo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

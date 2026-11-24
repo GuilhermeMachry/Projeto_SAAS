@@ -11,8 +11,12 @@ ENV/
 .coverage
 htmlcov/
 
-# Dados locais de execução e silos (manter estrutura com .gitkeep)
+# Dados locais de execução, segredos e silos (manter estrutura com .gitkeep)
+.env
+.env.*
+!.env.example
 storage/tenants/*.json
+storage/tenants/.locks/
 data/
 *.db
 

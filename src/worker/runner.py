@@ -29,6 +29,88 @@ class WorkerRunner:
         self.scraper = scraper or ScraperEngine()
         self.notifier = notifier or TelegramNotifier()
 
+    def run_cycle_for_tenant(self, tenant_id: str) -> Dict[str, Any]:
+        """Executa uma varredura isolada estritamente sobre o silo de um único tenant."""
+        start_time = time.time()
+        stats: Dict[str, Any] = {
+            "tenant_id": tenant_id,
+            "componentes_checados": 0,
+            "cotacoes_sucesso": 0,
+            "alertas_disparados": 0,
+            "falhas": 0,
+            "duracao_segundos": 0.0,
+            "novos_alertas": [],
+        }
+
+        tenant_profile = self.storage.get_tenant(tenant_id)
+        if not tenant_profile:
+            stats["duracao_segundos"] = round(time.time() - start_time, 3)
+            return stats
+
+        targets = self.storage.list_targets(tenant_id)
+        logger.info(f"[Worker] Processando Tenant '{tenant_id}' ({len(targets)} componentes)")
+
+        for target in targets:
+            stats["componentes_checados"] += 1
+            try:
+                price = self.scraper.scrape_url(target.url)
+                if price is not None:
+                    stats["cotacoes_sucesso"] += 1
+                    alerta_disparado = price <= target.preco_alvo
+
+                    # 1. Gravar cotação no histórico cronológico do silo do tenant
+                    price_record = PriceRecord(
+                        target_id=target.id,
+                        nome_componente=target.nome_componente,
+                        url=target.url,
+                        preco_coletado=price,
+                        preco_alvo=target.preco_alvo,
+                        alerta_disparado=alerta_disparado,
+                    )
+                    self.storage.record_price(tenant_id, price_record)
+                    self.storage.update_target_last_price(tenant_id, target.id, price)
+
+                    # 2. Avaliação de Preço e Despacho de Notificação Push
+                    if alerta_disparado:
+                        stats["alertas_disparados"] += 1
+                        logger.info(
+                            f"[Worker] 🎯 META ATINGIDA para {tenant_id}! "
+                            f"{target.nome_componente}: R$ {price:.2f} <= R$ {target.preco_alvo:.2f}"
+                        )
+                        self.notifier.send_price_alert(
+                            tenant_id=tenant_id,
+                            chat_id=tenant_profile.telegram_chat_id,
+                            component_name=target.nome_componente,
+                            current_price=price,
+                            target_price=target.preco_alvo,
+                            original_url=target.url,
+                        )
+
+                        # Gravar auditoria do alerta no silo
+                        alert_log = AlertLog(
+                            tenant_id=tenant_id,
+                            target_id=target.id,
+                            mensagem=(
+                                f"Oportunidade detectada: R$ {price:.2f} "
+                                f"(Meta: R$ {target.preco_alvo:.2f})"
+                            ),
+                        )
+                        self.storage.record_alert(tenant_id, alert_log)
+                        stats["novos_alertas"].append(alert_log)
+                else:
+                    stats["falhas"] += 1
+                    logger.warning(
+                        f"[Worker] Não foi possível obter preço para '{target.nome_componente}' "
+                        f"do tenant '{tenant_id}'."
+                    )
+
+            except Exception as exc:
+                stats["falhas"] += 1
+                logger.error(f"[Worker] Falha ao processar componente {target.id} do tenant {tenant_id}: {exc}")
+
+        stats["duracao_segundos"] = round(time.time() - start_time, 3)
+        return stats
+
     def run_cycle(self) -> Dict[str, Any]:
         """Executa um ciclo completo de varredura sobre todos os silos de tenants ativos."""
         start_time = time.time()
@@ -47,70 +129,11 @@ class WorkerRunner:
 
         for tenant_id in tenant_ids:
             try:
-                tenant_profile = self.storage.get_tenant(tenant_id)
-                if not tenant_profile:
-                    continue
-                
-                targets = self.storage.list_targets(tenant_id)
-                logger.info(f"[Worker] Processando Tenant '{tenant_id}' ({len(targets)} componentes)")
-
-                for target in targets:
-                    stats["componentes_checados"] += 1
-                    try:
-                        price = self.scraper.scrape_url(target.url)
-                        if price is not None:
-                            stats["cotacoes_sucesso"] += 1
-                            alerta_disparado = price <= target.preco_alvo
-
-                            # 1. Gravar cotação no histórico cronológico do silo do tenant
-                            price_record = PriceRecord(
-                                target_id=target.id,
-                                nome_componente=target.nome_componente,
-                                url=target.url,
-                                preco_coletado=price,
-                                preco_alvo=target.preco_alvo,
-                                alerta_disparado=alerta_disparado,
-                            )
-                            self.storage.record_price(tenant_id, price_record)
-                            self.storage.update_target_last_price(tenant_id, target.id, price)
-
-                            # 2. Avaliação de Preço e Despacho de Notificação Push
-                            if alerta_disparado:
-                                stats["alertas_disparados"] += 1
-                                logger.info(
-                                    f"[Worker] 🎯 META ATINGIDA para {tenant_id}! "
-                                    f"{target.nome_componente}: R$ {price:.2f} <= R$ {target.preco_alvo:.2f}"
-                                )
-                                self.notifier.send_price_alert(
-                                    tenant_id=tenant_id,
-                                    chat_id=tenant_profile.telegram_chat_id,
-                                    component_name=target.nome_componente,
-                                    current_price=price,
-                                    target_price=target.preco_alvo,
-                                    original_url=target.url,
-                                )
-
-                                # Gravar auditoria do alerta no silo
-                                alert_log = AlertLog(
-                                    tenant_id=tenant_id,
-                                    target_id=target.id,
-                                    mensagem=(
-                                        f"Oportunidade detectada: R$ {price:.2f} "
-                                        f"(Meta: R$ {target.preco_alvo:.2f})"
-                                    ),
-                                )
-                                self.storage.record_alert(tenant_id, alert_log)
-                        else:
-                            stats["falhas"] += 1
-                            logger.warning(
-                                f"[Worker] Não foi possível obter preço para '{target.nome_componente}' "
-                                f"do tenant '{tenant_id}'."
-                            )
-
-                    except Exception as exc:
-                        stats["falhas"] += 1
-                        logger.error(f"[Worker] Falha ao processar componente {target.id} do tenant {tenant_id}: {exc}")
-
+                t_stats = self.run_cycle_for_tenant(tenant_id)
+                stats["componentes_checados"] += t_stats["componentes_checados"]
+                stats["cotacoes_sucesso"] += t_stats["cotacoes_sucesso"]
+                stats["alertas_disparados"] += t_stats["alertas_disparados"]
+                stats["falhas"] += t_stats["falhas"]
             except Exception as exc:
                 stats["falhas"] += 1
                 logger.error(f"[Worker] Erro ao iterar tenant {tenant_id}: {exc}")

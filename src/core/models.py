@@ -4,7 +4,9 @@ from enum import Enum
 from typing import Optional, List
 from datetime import datetime, timezone
 import uuid
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, field_validator
+
+from src.core.security import validate_monitor_url
 
 
 class TenantType(str, Enum):
@@ -27,10 +29,38 @@ class TenantResponse(BaseModel):
     created_at: str
 
 
+class TenantAuthResponse(TenantResponse):
+    access_token: str = Field(..., description="Token Bearer HMAC-SHA256 vinculado estritamente a este tenant")
+    token_type: str = Field(default="bearer")
+
+
+class TokenRequest(BaseModel):
+    tenant_id: str = Field(..., min_length=3, max_length=50, description="Identificador único do tenant")
+    telegram_chat_id: str = Field(..., min_length=3, max_length=30, description="Chat ID cadastrado como credencial")
+
+
 class MonitorTargetCreate(BaseModel):
     nome_componente: str = Field(..., min_length=2, max_length=150, description="Nome da peça de hardware")
     url: str = Field(..., description="URL da página do e-commerce")
     preco_alvo: float = Field(..., gt=0, description="Preço teto desejado pelo tenant em R$")
+
+    @field_validator("url")
+    @classmethod
+    def check_url_ssrf(cls, v: str) -> str:
+        return validate_monitor_url(v)
+
+
+class MonitorTargetUpdate(BaseModel):
+    nome_componente: Optional[str] = Field(default=None, min_length=2, max_length=150)
+    url: Optional[str] = Field(default=None)
+    preco_alvo: Optional[float] = Field(default=None, gt=0)
+
+    @field_validator("url")
+    @classmethod
+    def check_url_ssrf(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        return validate_monitor_url(v)
 
 
 class MonitorTargetResponse(BaseModel):
@@ -63,3 +93,26 @@ class AlertLog(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     canal: str = "Telegram"
     status: str = "ENVIADO"
+
+
+class SiloInfoResponse(BaseModel):
+    tenant_id: str
+    tipo: TenantType
+    plan_name: str
+    silo_filename: str
+    size_bytes: int
+    permissions_octal: str
+    targets_count: int
+    targets_quota: int
+    history_count: int
+    alerts_count: int
+
+
+class ScanResultResponse(BaseModel):
+    tenant_id: str
+    componentes_checados: int
+    cotacoes_sucesso: int
+    alertas_disparados: int
+    falhas: int
+    duracao_segundos: float
+    novos_alertas: List[AlertLog] = Field(default_factory=list)
